@@ -1,10 +1,26 @@
-cflags{
+local arch = ({
+	aarch64='aarch64',
+	x86_64='x86_64',
+})[config.target.platform:match('[^-]*')]
+if not arch then error('unsupported arch') end
+
+local generic_cflags = {
 	'-D NDEBUG',
 	'-I $dir',
 	'-I $srcdir/Include',
 	'-I $srcdir/Include/internal',
 	'-isystem $builddir/pkg/linux-headers/include',
 }
+
+local arch_cflags = {}
+arch_cflags['aarch64'] = generic_cflags
+arch_cflags['x86_64']  = {
+	'-D HAVE_GCC_ASM_FOR_X64=1',
+	'-D HAVE_GCC_ASM_FOR_X87=1',
+	table.unpack(generic_cflags)
+}
+
+cflags(arch_cflags[arch])
 
 pkg.deps = {'pkg/linux-headers/headers'}
 local libs = {}
